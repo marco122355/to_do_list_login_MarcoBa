@@ -1,0 +1,37 @@
+name: Run Tests and Check Coverage
+
+on:
+  push:
+    branches:
+      - main  # O 'master' si es el nombre de tu rama principal
+  pull_request:
+    branches:
+      - main  # También puedes hacer que ejecute las pruebas en los PRs
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12'  # Usa la versión que estés utilizando en tu proyecto
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Instalar las dependencias del proyecto
+
+    - name: Run tests with pytest
+      run: |
+        pytest --cov=.  # Ejecuta las pruebas y verifica la cobertura de código
+
+    - name: Upload coverage report to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        file: ./coverage.xml  # Si usas cobertura en formato XML
+        token: ${{ secrets.CODECOV_TOKEN }}  # Opcional, si deseas subir la cobertura a Codecov
