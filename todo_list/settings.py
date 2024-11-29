@@ -114,12 +114,15 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Login and Logout settings
 LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'tasks'
+LOGOUT_REDIRECT_URL = 'login'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
 
-# fix
+# Default auto field for models
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

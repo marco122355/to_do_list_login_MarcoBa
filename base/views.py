@@ -3,20 +3,17 @@ from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
 from django.urls import reverse_lazy
-
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
-
-# Imports for Reordering Feature
 from django.views import View
-from django.shortcuts import redirect
 from django.db import transaction
+import requests
+from django.contrib.auth.decorators import login_required
 
 from .models import Task
 from .forms import PositionForm
-
 
 class CustomLoginView(LoginView):
     template_name = 'base/login.html'
@@ -25,7 +22,6 @@ class CustomLoginView(LoginView):
 
     def get_success_url(self):
         return reverse_lazy('tasks')
-
 
 class RegisterPage(FormView):
     template_name = 'base/register.html'
@@ -44,7 +40,6 @@ class RegisterPage(FormView):
             return redirect('tasks')
         return super(RegisterPage, self).get(*args, **kwargs)
 
-
 class TaskList(LoginRequiredMixin, ListView):
     model = Task
     context_object_name = 'tasks'
@@ -56,19 +51,24 @@ class TaskList(LoginRequiredMixin, ListView):
 
         search_input = self.request.GET.get('search-area') or ''
         if search_input:
-            context['tasks'] = context['tasks'].filter(
-                title__contains=search_input)
-
+            context['tasks'] = context['tasks'].filter(title__contains=search_input)
         context['search_input'] = search_input
 
-        return context
+        # Obtener los precios de criptomonedas y pasarlos al contexto
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd"
+        try:
+            response = requests.get(url, timeout=5)
+            response.raise_for_status()
+            context['crypto_data'] = response.json()
+        except requests.RequestException:
+            context['crypto_data'] = None
 
+        return context
 
 class TaskDetail(LoginRequiredMixin, DetailView):
     model = Task
     context_object_name = 'task'
     template_name = 'base/task.html'
-
 
 class TaskCreate(LoginRequiredMixin, CreateView):
     model = Task
@@ -79,17 +79,16 @@ class TaskCreate(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         return super(TaskCreate, self).form_valid(form)
 
-
 class TaskUpdate(LoginRequiredMixin, UpdateView):
     model = Task
     fields = ['title', 'description', 'complete']
     success_url = reverse_lazy('tasks')
 
-
-class DeleteView(LoginRequiredMixin, DeleteView):
+class TaskDeleteView(LoginRequiredMixin, DeleteView):
     model = Task
     context_object_name = 'task'
     success_url = reverse_lazy('tasks')
+    
     def get_queryset(self):
         owner = self.request.user
         return self.model.objects.filter(user=owner)
@@ -105,3 +104,22 @@ class TaskReorder(View):
                 self.request.user.set_task_order(positionList)
 
         return redirect(reverse_lazy('tasks'))
+
+# Vista para mostrar precios de criptomonedas
+@login_required
+def crypto_prices_view(request):
+    url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd"
+    crypto_data = None
+    error_message = None
+
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        crypto_data = response.json()
+    except requests.exceptions.Timeout:
+        error_message = "La solicitud a la API de CoinGecko ha agotado el tiempo de espera."
+    except requests.exceptions.RequestException as e:
+        error_message = f"Error al obtener los precios: {e}"
+
+    # Renderizar la plantilla con el mensaje de error en caso de fallo
+    return render(request, 'base/crypto_prices.html', {'crypto_data': crypto_data, 'error_message': error_message})

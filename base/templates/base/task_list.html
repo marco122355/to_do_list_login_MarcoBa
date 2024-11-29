@@ -1,4 +1,5 @@
-{% extends 'base/main.html' %} {% block content %}
+{% extends 'base/main.html' %} 
+{% block content %}
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <div class="header-bar">
@@ -8,10 +9,16 @@
     </div>
 
     {% if request.user.is_authenticated %}
-    <a href="{% url 'logout' %}">Logout</a> {% else %}
-    <a href="{% url 'login' %}">Login</a> {% endif %}
+    <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="button" style="background:none;border:none;color:inherit;padding:0;cursor:pointer;">
+            Logout
+        </button>
+    </form>
+    {% else %}
+    <a href="{% url 'login' %}">Login</a>
+    {% endif %}
 </div>
-
 
 <div id="search-add-wrapper">
     <form method="GET" style="display: flex;">
@@ -23,13 +30,11 @@
     {% endif %}
 </div>
 
-
 <!-- Hidden form. Form submits new item positions -->
 <form style="display: none;" id="reorderForm" method="post" action="{% url 'task-reorder' %}">
     {% csrf_token %}
     <input type="hidden" id="positionInput" name="position">
 </form>
-
 
 <div id="tasklist" class="task-items-wrapper">
     {% for task in tasks %}
@@ -37,9 +42,11 @@
         <div class="task-title">
             {% if task.complete %}
             <div class="task-complete-icon"></div>
-            <i><s><a href="{% url 'task-update' task.id %}">{{task}}</a></s></i> {% else %}
+            <i><s><a href="{% url 'task-update' task.id %}">{{task}}</a></s></i>
+            {% else %}
             <div class="task-incomplete-icon"></div>
-            <a href="{% url 'task-update' task.id %}">{{task}}</a> {% endif %}
+            <a href="{% url 'task-update' task.id %}">{{task}}</a>
+            {% endif %}
         </div>
         <div class="task-controls">
             <a class="delete-link" href="{% url 'task-delete' task.id %}">&#215;</a>
@@ -50,10 +57,16 @@
     {% empty %}
     <div style="text-align: center; padding-bottom: 10px; line-height: 1em;">
         <h3>No new tasks are created.</h3>
-        <h3>Create a <a style="text-decoration: none; color: #e53935;" href="{% url 'task-create' %}">New task</a> ! </h3>
+        <h3>Create a <a style="text-decoration: none; color: #e53935;" href="{% url 'task-create' %}">New task</a> !</h3>
     </div>
     {% endfor %}
 </div>
+
+<!-- Incluir la sección de precios de criptomonedas -->
+<div class="crypto-prices-section">
+    {% include 'base/crypto_prices.html' %}
+</div>
+
 
 <script>
     var taskList = document.getElementById("tasklist");
@@ -64,7 +77,6 @@
         handle: '.handle',
         ghostClass: 'dropArea',
         chosenClass: 'selectedTask',
-
     });
 
     function reordering() {
@@ -73,7 +85,6 @@
         for (let row of rows) {
             pos.push(row.dataset.position);
         }
-        console.log(pos.join(","))
         positionInput.value = pos.join(',');
         reorderForm.submit();
     }

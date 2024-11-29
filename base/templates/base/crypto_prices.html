@@ -1,0 +1,9 @@
+{% if crypto_data %}
+    <div>
+        <h3>Precios de Criptomonedas</h3>
+        <p>Bitcoin: ${{ crypto_data.bitcoin.usd }}</p>
+        <p>Ethereum: ${{ crypto_data.ethereum.usd }}</p>
+    </div>
+{% else %}
+    <p>No se pudieron obtener los precios de las criptomonedas en este momento.</p>
+{% endif %}
