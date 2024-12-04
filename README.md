@@ -13,3 +13,6 @@ app to do list
 
 - uses chrome
 >>>>>>> 0de8fe3 (Primer commit)
+
+-to_do_list_login_MarcoBa (nombre de dominio)
+-git rebase --abort

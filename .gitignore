@@ -150,3 +150,4 @@ Thumbs.db #thumbnail cache on Windows
 
 # profiling data
 .prof
+todo_list/password.env
